@@ -11,13 +11,7 @@ public class HealthBar : ValueGauge
         if (ownerHealthComponent)
         {
             ownerHealthComponent.OnHealthChanged += HealthChanged;
-            ownerHealthComponent.OnDead += OwnerDead;
         }
-    }
-
-    private void OwnerDead()
-    {
-        Destroy(gameObject);
     }
 
     private void HealthChanged(float newHealth, float delta, float maxHealth)

@@ -8,7 +8,7 @@ public class WidgetComponent : MonoBehaviour
     private Camera _mainCamera;
 
     private Widget _widget;
-    private void Start()
+    private void Awake()
     {
         _widget = Instantiate(widgetPrefab);
         _widget.SetOwner(gameObject);
@@ -24,7 +24,7 @@ public class WidgetComponent : MonoBehaviour
 
     private void Update()
     {
-        if (_widget)
+        if (_widget && attachTransform && _mainCamera)
         {
             _widget.transform.position = _mainCamera.WorldToScreenPoint(attachTransform.position);
         }

@@ -1,8 +1,9 @@
+using Unity.Netcode;
 using UnityEngine;
 
-public abstract class Widget : MonoBehaviour
+public abstract class Widget : NetworkBehaviour
 {
-    private GameObject owner;
+    protected GameObject owner;
 
     public virtual void SetOwner(GameObject newOwner)
     {

@@ -1,8 +1,9 @@
 using System;
+using Unity.Netcode;
 using UnityEngine;
 
 
-public abstract class DamageComponent : MonoBehaviour
+public abstract class DamageComponent : NetworkBehaviour
 {
    [SerializeField] private bool bAttackFriendly;
    [SerializeField] private bool bAttackEnemy;
@@ -18,6 +19,7 @@ public abstract class DamageComponent : MonoBehaviour
 
    protected void ApplyDamage(GameObject target, float damageAmt)
    {
+      Debug.Log("applying damage");
       HealthComponent targetHealthComponent = target.GetComponent<HealthComponent>();
       if (targetHealthComponent)
       {
@@ -27,15 +29,21 @@ public abstract class DamageComponent : MonoBehaviour
 
    public bool ShouldDamage(GameObject target)
    {
-      TeamAttitude teamAttitude = _teamInterface.GetTeamAttitudeTowards(target);
+        HealthComponent targetHealthComponent = target.GetComponent<HealthComponent>();
+        if (!targetHealthComponent) 
+        {
+            return false;
+        }
 
-      if (teamAttitude == TeamAttitude.Enemy && bAttackEnemy)
-         return true;
-      if (teamAttitude == TeamAttitude.Friendly && bAttackFriendly)
-         return true;
-      if (teamAttitude == TeamAttitude.Neutral && bAttackNeutral)
-         return true;
+        TeamAttitude teamAttitude = _teamInterface.GetTeamAttitudeTowards(target);
 
-      return false;
-   }
+        if (teamAttitude == TeamAttitude.Enemy && bAttackEnemy)
+            return true;
+        if (teamAttitude == TeamAttitude.Friendly && bAttackFriendly)
+            return true;
+        if (teamAttitude == TeamAttitude.Neutral && bAttackNeutral)
+            return true;
+        Debug.Log("Cannot attack");
+        return false;
+    }
 }

@@ -4,7 +4,7 @@ using UnityEngine;
 using UnityEngine.UI;
 
 
-public struct HealthInfo : INetworkSerializable
+/*public struct HealthInfo : INetworkSerializable
 {
     int _health;
     int _maxHealth;
@@ -14,7 +14,7 @@ public struct HealthInfo : INetworkSerializable
         serializer.SerializeValue(ref _health);
         serializer.SerializeValue(ref _maxHealth);
     }
-}
+}*/
 
 public class HealthComponent : NetworkBehaviour, INetworkSerializable
 {
@@ -24,16 +24,19 @@ public class HealthComponent : NetworkBehaviour, INetworkSerializable
     public event OnHealthChangedDelegate OnTakenDamage;
     public event OnDeadDelegate OnDead;
     
-   [SerializeField] private float maxHealth = 100;
-   private float _health;
+    [SerializeField] private float maxHealth = 100;
+    private float _health;
 
     [SerializeField] Button debugDamageBtnPrefab;
     Button damageBtn;
    
-   private void Awake()
-   {
+    private void Awake()
+    {
+        Debug.Log($"Awake b4 statement: h={_health}, mH={maxHealth}");
        _health = maxHealth;
-        GameObject layout = GameObject.Find("Debug");
+        Debug.Log($"Awake aftr statement: h={_health}, mH={maxHealth}");
+
+        /*GameObject layout = GameObject.Find("Debug");
         damageBtn = Instantiate(debugDamageBtnPrefab, layout.transform);
 
         if (damageBtn)
@@ -42,11 +45,39 @@ public class HealthComponent : NetworkBehaviour, INetworkSerializable
             {
                 ChangeHealth(-10f);
             });
-       }
-   }
+       }*/
+    }
+    public void RefreshHealth() 
+    {
+        if (IsServer && IsLocalPlayer)
+        {
+            RefreshHealthServerRpc(_health);
+        }
+        else if (IsClient && IsLocalPlayer)
+        {
+            RefreshHealthServerRpc(_health);
+        }
+    }
 
-   public void ChangeHealth(float amt)
-   {
+    [Rpc(SendTo.Server)]
+    private void RefreshHealthServerRpc(float health)
+    {
+        RefreshHealthClientRpc(health);
+    }
+
+    [Rpc(SendTo.Everyone)]
+    private void RefreshHealthClientRpc(float health)
+    {
+        RefreshCurrentHealth(health);
+    }
+
+    private void RefreshCurrentHealth(float health)
+    {
+        OnHealthChanged?.Invoke(health, 0, maxHealth);
+    }
+
+    public void ChangeHealth(float amt)
+    {
         if (IsServer && IsLocalPlayer)
         {
             UpdateHealthServerRpc(amt);
@@ -55,11 +86,10 @@ public class HealthComponent : NetworkBehaviour, INetworkSerializable
         { 
             UpdateHealthServerRpc(amt);
         }
-   }
+    }
     [Rpc(SendTo.Server)]
     public void UpdateHealthServerRpc(float amt)
     {
-        UpdateHealth(amt);
         UpdateHealthClientRpc(amt);
     }
     [Rpc(SendTo.Everyone)]
@@ -69,13 +99,14 @@ public class HealthComponent : NetworkBehaviour, INetworkSerializable
     }
     public void UpdateHealth(float amt)
     {
-        if (amt == 0 || _health == 0)
+        Debug.Log($"Update Health: amt={amt}, health={_health}");
+        if (_health == 0)
             return;
 
         _health = Mathf.Clamp(_health + amt, 0, maxHealth);
         if (amt < 0)
         {
-            OnTakenDamage?.Invoke(_health, amt, maxHealth);
+            OnTakenDamage?.Invoke(_health, amt, maxHealth);//not used right now
         }
         OnHealthChanged?.Invoke(_health, amt, maxHealth);
 
